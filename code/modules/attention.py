@@ -8,9 +8,9 @@ class CausalSelfAttention(nn.Module):
   def __init__(self, config):
     super().__init__()
 
-    self.num_attention_heads = config.num_attention_heads
-    self.attention_head_size = int(config.hidden_size / config.num_attention_heads)
-    self.all_head_size = self.num_attention_heads * self.attention_head_size
+    self.num_attention_heads = config.num_attention_heads # 12
+    self.attention_head_size = int(config.hidden_size / config.num_attention_heads) # 768 / 12 = 64
+    self.all_head_size = self.num_attention_heads * self.attention_head_size # eq hidden_size
 
     # Initialize the linear transformation layers for key, value, query.
     self.query = nn.Linear(config.hidden_size, self.all_head_size)
@@ -34,8 +34,14 @@ class CausalSelfAttention(nn.Module):
   def attention(self, key, query, value, attention_mask):
 
     ### YOUR CODE HERE
-    raise NotImplementedError
-
+    score = torch.matmul(query, torch.transpose(key, -1, -2)) / torch.sqrt(self.attention_head_size)
+    score_masked = score * attention_mask
+    weights = torch.softmax(score_masked, dim=-1)
+    output_head = torch.matmul(weights, value) # (b h t d) = (b h t t) (b h t d)
+    output_raw = rearrange(output_head, 'b h t d -> b t h d')
+    output = rearrange(output_raw, 'b t h d -> b t (h d)')
+    # linear ?
+    return output
 
   def forward(self, hidden_states, attention_mask):
     """
