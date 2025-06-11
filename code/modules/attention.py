@@ -35,7 +35,10 @@ class CausalSelfAttention(nn.Module):
 
     ### YOUR CODE HERE
     score = torch.matmul(query, torch.transpose(key, -1, -2)) / self.attention_head_size ** 0.5
-    score.masked_fill_(attention_mask, float('-inf'))
+    seq_len = score.shape[-1]
+    causal_mask = torch.tril(torch.ones(seq_len, seq_len, device=score.device)).unsqueeze(0).unsqueeze(0)
+    score.masked_fill_(causal_mask == 0, float('-inf'))
+    score += attention_mask
     weights = self.dropout(torch.softmax(score, dim=-1))
     output_head = torch.matmul(weights, value) # (b h t d) = (b h t t) (b h t d)
     output_raw = rearrange(output_head, 'b h t d -> b t h d')

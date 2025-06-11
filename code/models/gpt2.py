@@ -50,7 +50,7 @@ class GPT2Model(GPTPreTrainedModel):
     inputs_embeds = None
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+    inputs_embeds = self.word_embedding(input_ids)
 
 
     pos_ids = self.position_ids[:, :seq_length]
@@ -59,7 +59,9 @@ class GPT2Model(GPTPreTrainedModel):
     ### TODO: Use pos_ids to get position embedding from self.pos_embedding into pos_embeds.
     ###       Then, add two embeddings together; then apply dropout and return.
     ### YOUR CODE HERE
-    raise NotImplementedError
+    pos_embeds = self.pos_embedding(pos_ids)
+    combined_embeds = inputs_embeds + pos_embeds # broadcast
+    return self.embed_dropout(combined_embeds)
 
 
   def encode(self, hidden_states, attention_mask):
