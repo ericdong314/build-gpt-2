@@ -34,13 +34,12 @@ class CausalSelfAttention(nn.Module):
   def attention(self, key, query, value, attention_mask):
 
     ### YOUR CODE HERE
-    score = torch.matmul(query, torch.transpose(key, -1, -2)) / torch.sqrt(self.attention_head_size)
-    score_masked = score * attention_mask
-    weights = torch.softmax(score_masked, dim=-1)
+    score = torch.matmul(query, torch.transpose(key, -1, -2)) / self.attention_head_size ** 0.5
+    score.masked_fill_(attention_mask, float('-inf'))
+    weights = self.dropout(torch.softmax(score, dim=-1))
     output_head = torch.matmul(weights, value) # (b h t d) = (b h t t) (b h t d)
     output_raw = rearrange(output_head, 'b h t d -> b t h d')
     output = rearrange(output_raw, 'b t h d -> b t (h d)')
-    # linear ?
     return output
 
   def forward(self, hidden_states, attention_mask):
