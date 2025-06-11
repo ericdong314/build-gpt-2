@@ -30,7 +30,9 @@ class GPT2Layer(nn.Module):
         IN THIS FUNCTION.
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+    output_trans = dense_layer(output)
+    return dropout(output_trans) + input
+
 
 
   def forward(self, hidden_states, attention_mask):
@@ -43,5 +45,11 @@ class GPT2Layer(nn.Module):
     """
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+    hidden_states_normalized = self.attention_layer_norm(hidden_states)
+    attn_value = self.self_attention(hidden_states_normalized, attention_mask)
+    ff_in = self.add(hidden_states, attn_value, self.attention_dense, self.attention_dropout) 
+
+    ff_in_norm = self.out_layer_norm(ff_in)
+    interm = self.interm_af(self.interm_dense(ff_in_norm))
+    return self.add(ff_in, interm, self.out_dense, self.out_dropout)
 
